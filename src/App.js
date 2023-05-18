@@ -2,6 +2,16 @@ import './App.css';
 import { useState } from 'react';
 import { useContext } from 'react';
 import AnswersContext from './components/answerContext';
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  setCurrentQuestion,
+  setScore,
+  setShowScore,
+  setCorrectAnswers,
+  addCorrectAnswer,
+  resetQuiz,
+} from "./actions/actions";
 
 function App() {
 
@@ -55,46 +65,47 @@ function App() {
   ];
 
 
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [score, setScore] = useState(0)
-  const [showScore, setShowScore] = useState(false)
-  const [correctAnswers, setCorrectAnswers] = useState([]);
+  const dispatch = useDispatch();
+  const { currentQuestion, score, showScore, correctAnswers } = useSelector(
+    (state) => state.quiz
+  );
 
+  useEffect(() => {
+    dispatch(resetQuiz());
+  }, []);
 
-  const { addCorrectAnswer } = useContext(AnswersContext);
 
   const handleAnswerOptionClick = (isCorrect) => {
     if (isCorrect) {
-      setCorrectAnswers([
-        ...correctAnswers,
-        questions[currentQuestion].questionText,
-      ]);
-      addCorrectAnswer(questions[currentQuestion].questionText);
-      setScore(score + 1);
+      dispatch(
+        setCorrectAnswers([
+          ...correctAnswers,
+          questions[currentQuestion].questionText,
+        ])
+      );
+      dispatch(addCorrectAnswer(questions[currentQuestion].questionText));
+      dispatch(setScore(score + 1));
       
     }
 
     const nextQuestion = currentQuestion + 1
     
     if (nextQuestion < questions.length) {
-      setCurrentQuestion(nextQuestion)
+      dispatch(setCurrentQuestion(nextQuestion));
     } else {
-      setShowScore(true)
+      dispatch(setShowScore(true));
     }
   }
 
   const refresh = () => {
-    setCurrentQuestion(0)
-    setScore(0)
-    setShowScore(false)
+    dispatch(resetQuiz());
   }
 
   return (
     <AnswersContext.Provider
       value={{
         correctAnswers,
-        addCorrectAnswer: (answer) =>
-          setCorrectAnswers([...correctAnswers, answer]),
+        addCorrectAnswer: (answer) => dispatch(addCorrectAnswer(answer)),
       }}
     >
       <div className="app">
@@ -119,11 +130,12 @@ function App() {
             </div>
             <div className="answer">
               {questions[currentQuestion].answerOptions.map((item) => (
-                <div className='answer-text-wrapper'>
-                  <p className='answer-text'>{item.answerText}</p>
+                <div className="answer-text-wrapper">
+                  <p className="answer-text">{item.answerText}</p>
                   <button
-                    onClick={() => handleAnswerOptionClick(item.isCorrect)}>
-                    {/* {item.answerText} */}Select answer
+                    onClick={() => handleAnswerOptionClick(item.isCorrect)}
+                  >
+                    Select answer
                   </button>
                 </div>
               ))}
